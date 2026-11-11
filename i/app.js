@@ -65,29 +65,32 @@ var STORAGE_KEY = 'd_project_i_selected_amount';
   function renderCalculator() {
     selectedAmount = Number($('#amount').value) / 10000;
     selectedBand = amountBand(selectedAmount);
-    $('#amount-value').textContent = formatMoney(selectedAmount * 10000);
+    var principal = selectedAmount * 10000;
+    $('#amount-value').textContent = formatMoney(principal);
     var annualRate = annualRateForTerm(selectedTerm);
-    var payment = monthlyPayment(selectedAmount * 10000, annualRate, selectedTerm);
+    var payment = monthlyPayment(principal, annualRate, selectedTerm);
+    var totalRepayment = payment * selectedTerm;
     $('#payment').textContent = formatMoney(payment);
     $('#rate').textContent = (annualRate * 100).toFixed(1) + '%';
-    $('#interest').textContent = formatMoney(payment * selectedTerm - selectedAmount * 10000);
-    $('#total').textContent = formatMoney(payment * selectedTerm);
+    $('#interest').textContent = formatMoney(totalRepayment - principal);
+    $('#total').textContent = formatMoney(totalRepayment);
     syncSelectedBand();
 
     $all('[data-term]').forEach(function (button) {
-      var active = Number(button.getAttribute('data-term')) === selectedTerm;
-      button.classList.toggle('selected', active);
-      button.setAttribute('aria-pressed', active ? 'true' : 'false');
+      setCalculatorOptionSelected(button, Number(button.getAttribute('data-term')) === selectedTerm);
     });
     safeSessionSet(STORAGE_KEY, String(selectedAmount));
+  }
+
+  function setCalculatorOptionSelected(button, selected) {
+    button.classList.toggle('selected', selected);
+    button.setAttribute('aria-pressed', selected ? 'true' : 'false');
   }
 
   function syncSelectedBand() {
     $('#summary').textContent = selectedBand;
     $all('[data-band]').forEach(function (button) {
-      var active = button.getAttribute('data-band') === selectedBand;
-      button.classList.toggle('selected', active);
-      button.setAttribute('aria-pressed', active ? 'true' : 'false');
+      setCalculatorOptionSelected(button, button.getAttribute('data-band') === selectedBand);
     });
   }
 
@@ -111,8 +114,7 @@ var STORAGE_KEY = 'd_project_i_selected_amount';
     $all('.purposes button').forEach(function (button) {
       button.addEventListener('click', function () {
         $all('.purposes button').forEach(function (item) {
-          item.classList.toggle('selected', item === button);
-          item.setAttribute('aria-pressed', item === button ? 'true' : 'false');
+          setCalculatorOptionSelected(item, item === button);
         });
       });
     });
